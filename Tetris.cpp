@@ -1,17 +1,28 @@
 #include "iGraphics.h"
-string tetrisDesign[]={"Data\\Tetris_1.txt","Data\\Tetris_2.txt","Data\\Tetris_3.txt","Data\\Tetris_4.txt","Data\\Tetris_5.txt","Data\\Tetris_6.txt","Data\\Tetris_7.txt"};
+#include <fstream>
+string tetrisDesign[] = {
+	"Data\\Tetris_1.txt",
+	"Data\\Tetris_2.txt",
+	"Data\\Tetris_3.txt",
+	"Data\\Tetris_4.txt",
+	"Data\\Tetris_5.txt",
+	"Data\\Tetris_6.txt",
+	"Data\\Tetris_7.txt"
+};
+
+int Score=0;
 void Generate();
-void CheckBottom();
-void CheckLeft();
-void CheckRight();
+bool CheckBottom();
+bool CheckLeft();
+bool CheckRight();
 class Block {
 public:
-	static const int Height = 40, Width = 40, TotalR = 25, TotalC = 19;
+	static const int Height = 40, Width = 40, TotalR = 20, TotalC = 10;
 };
 
 class Window {
 public:
-	static const int Height = 1000, Width = 760, X = 1000, Y = 0;
+	static const int Height = 850, Width = 400, X = 1000, Y = 0;
 	static constexpr char* Title = "Block";
 };
 
@@ -30,26 +41,45 @@ public:
 
 class Structure {
 public:
-	Color Cube[4][3];
-	int R, C;
+	Color Cube[4][4];
+	int R, C, row, col;
 	int Dir;
 	bool Active;
+	int design;
 	Structure()
 	{
-		int a=rand()%256,b=rand()%256,c=rand()%256;
-		for (int i = 0; i < 3; i++)
+		int a = rand() % 256, b = rand() % 256, c = rand() % 256;
+		for (int i = 0; i < 4; i++)
 		{
-			for (int j = 0; j < 2; j++)
+			for (int j = 0; j < 4; j++)
 			{
-				C = Block::TotalC / 2;
+				row = col = 4;
+				C = Block::TotalC / 3;
 				R = Block::TotalR;
-
-				Cube[i][j].R=a;
-				Cube[i][j].G=b;
-				Cube[i][j].B=c;
+				Cube[i][j].Show = false;
+				Cube[i][j].R = a;
+				Cube[i][j].G = b;
+				Cube[i][j].B = c;
 			}
 		}
-		Cube[1][1].Show = Cube[2][1].Show = true;
+		Dir = 0;
+		Active = false;
+	}
+	void Reset()
+	{
+		int a = 56 + rand() % 200, b = 56 + rand() % 200, c = 56 + rand() % 200;
+		for (int i = 0; i < col; i++)
+		{
+			for (int j = 0; j < row; j++)
+			{
+				C = Block::TotalC / 3;
+				R = Block::TotalR;
+				Cube[i][j].Show = false;
+				Cube[i][j].R = a;
+				Cube[i][j].G = b;
+				Cube[i][j].B = c;
+			}
+		}
 		Dir = 0;
 		Active = false;
 	}
@@ -64,49 +94,57 @@ void iDraw(void)
 
 	if (Tetris.Active)
 	{
-		iSetTransparentColor(Tetris.Cube[0][0].R,Tetris.Cube[0][0].G,Tetris.Cube[0][0].B, .3);
-		iFilledRectangle((Tetris.C)*Block::Width, (Tetris.R)*Block::Height, Block::Width, Block::Height);
-		iFilledRectangle((Tetris.C + 1)*Block::Width, (Tetris.R)*Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[3][1].Show)
-			iFilledRectangle((Tetris.C + 2)*Block::Width, Tetris.R * Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[1][0].Show)
-			iFilledRectangle((Tetris.C)*Block::Width, (Tetris.R + 1)*Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[0][0].Show)
-			iFilledRectangle((Tetris.C - 1)*Block::Width, (Tetris.R + 1)*Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[0][1].Show)
-			iFilledRectangle((Tetris.C - 1)*Block::Width, (Tetris.R)*Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[2][0].Show)
-			iFilledRectangle((Tetris.C + 1)*Block::Width, (Tetris.R + 1)*Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[1][2].Show)
-			iFilledRectangle((Tetris.C )*Block::Width, (Tetris.R - 1)*Block::Height, Block::Width, Block::Height);
-		if (Tetris.Cube[2][2].Show)
-			iFilledRectangle((Tetris.C + 1)*Block::Width, (Tetris.R - 1)*Block::Height, Block::Width, Block::Height);
-	}
-	else Generate();
+		iSetTransparentColor(Tetris.Cube[0][0].R, Tetris.Cube[0][0].G, Tetris.Cube[0][0].B, .3);
+		ifstream in;
+		in.open(tetrisDesign[Tetris.design], ios::in);
 
-	
+
+		for (int i = 0; i < Tetris.col; i++)
+		{
+			for (int j = 0; j < Tetris.row; j++)
+			{
+				if (Tetris.Cube[i][j].Show)
+				{
+					iFilledRectangle((Tetris.C + i)*Block::Width, (Tetris.R + j) * Block::Height, Block::Width, Block::Height);
+				}
+			}
+		}
+
+
+	}
+	else
+	{
+		Generate();
+	}
+
+
 	for (i = 0; i < Block::TotalC; i++)
 	{
 		for (j = 0; j < Block::TotalR; j++)
 		{
 			if (Cube[i][j].Show)
 			{
-				iSetTransparentColor(Cube[i][j].R,Cube[i][j].G,Cube[i][j].B, .5);
+				iSetTransparentColor(Cube[i][j].R, Cube[i][j].G, Cube[i][j].B, .5);
 				iFilledRectangle(i * Block::Width, j * Block::Height, Block::Width, Block::Height);
 			}
 		}
 	}
 
 	iSetTransparentColor(255, 255, 255, .2);
-	for (i = 0; i < Block::TotalC; i++)
+	for (i = 0; i <=Block::TotalC; i++)
 	{
-		iLine(Block::Width * i, 0, Block::Width * i, Window::Height);
+		iLine(Block::Width * i, 0, Block::Width * i,  Block::Height*Block::TotalR);
 	}
 
-	for (i = 0; i < Block::TotalR; i++)
+	for (i = 0; i <=Block::TotalR; i++)
 	{
-		iLine(0, Block::Height * i, Window::Width, Block::Height * i);
+		iLine(0, Block::Height * i, Block::Width*Block::TotalC, Block::Height * i);
 	}
+
+	iSetColor(255,255,255);
+	char temp[10];
+	itoa(Score,temp,10);
+	iText(10,Window::Height-30,temp);
 }
 
 void iMouseClick(int button, int state, int mx, int my)
@@ -130,7 +168,66 @@ void iMouseWheel(int button, int dir, int mx, int my)
 
 void iKeyboard(unsigned char key)
 {
+	if (key == ' ')
+	{
+		Tetris.Dir = (Tetris.Dir + 1) % 4;
+		ifstream in;
+		in.open(tetrisDesign[Tetris.design], ios::in);
 
+
+		for (int i = 0; i < Tetris.col; i++)
+		{
+			for (int j = 0; j < Tetris.row; j++)
+			{
+				int temp;
+				in >> temp;
+				if (Tetris.Dir == 0)
+				{
+					Tetris.Cube[i][j].Show = temp;
+				}
+			}
+		}
+
+		for (int i = 0; i < Tetris.col; i++)
+		{
+			for (int j = 0; j < Tetris.row; j++)
+			{
+				int temp;
+				in >> temp;
+				if (Tetris.Dir == 1)
+				{
+					Tetris.Cube[i][j].Show = temp;
+				}
+			}
+		}
+
+		for (int i = 0; i < Tetris.col; i++)
+		{
+			for (int j = 0; j < Tetris.row; j++)
+			{
+				int temp;
+				in >> temp;
+				if (Tetris.Dir == 2)
+				{
+					Tetris.Cube[i][j].Show = temp;
+				}
+			}
+		}
+
+		for (int i = 0; i < Tetris.col; i++)
+		{
+			for (int j = 0; j < Tetris.row; j++)
+			{
+				int temp;
+				in >> temp;
+				if (Tetris.Dir == 3)
+				{
+					Tetris.Cube[i][j].Show = temp;
+				}
+			}
+		}
+		in.close();
+	}
 }
 
 void iSpecialKeyboard(unsigned char key)
@@ -138,30 +235,22 @@ void iSpecialKeyboard(unsigned char key)
 	if (key == GLUT_KEY_END) exit(0);
 	else if (key == GLUT_KEY_RIGHT)
 	{
-		if (Tetris.C < Block::TotalC - 1)
+		if (CheckRight())
 		{
 			Tetris.C++;
 		}
 	}
 	else if (key == GLUT_KEY_LEFT)
 	{
-		if (Tetris.C > 0)
+		if (CheckLeft())
 		{
 			Tetris.C--;
 		}
 	}
-	// else if(key == GLUT_KEY_UP)
-	// {
-	// 	if(Tetris.R<Block::TotalR-1)
-	// 	{
-	// 		Tetris.R++;
-	// 	}
-	// }
 	else if (key == GLUT_KEY_DOWN)
 	{
-		if (Tetris.R > 0)
+		if (CheckBottom())
 		{
-			CheckBottom();
 			Tetris.R--;
 		}
 	}
@@ -169,103 +258,107 @@ void iSpecialKeyboard(unsigned char key)
 
 void Generate()
 {
-	Structure Temp;
-	Tetris = Temp;
+	Tetris.Reset();
 	Tetris.Active = true;
-	int Count = 0;
+	Tetris.design = rand() % 7;
+	ifstream in;
+	in.open(tetrisDesign[Tetris.design], ios::in);
 
-	while (Count < 2)
+	for (int i = 0; i < Tetris.col; i++)
 	{
-		if (rand() % 2)
+		for (int j = 0; j < Tetris.row; j++)
 		{
-			Tetris.Cube[1][0].Show = true;
-			Count++;
-			if (rand() % 2)
-			{
-				Tetris.Cube[0][0].Show = true;
-				Count++;
-				if (Count == 2) return;
-			}
-			if (rand() % 2)
-			{
-				Tetris.Cube[0][1].Show = true;
-				Count++;
-				if (Count == 2) return;
-			}
-			if (rand() % 2)
-			{
-				Tetris.Cube[1][2].Show = true;
-				Count++;
-				if (Count == 2) return;
-			}
-			Tetris.Cube[2][0].Show = true;
-			Count++; if (Count == 2) return;
-		}
-
-		else if (rand() % 2)
-		{
-			Tetris.Cube[0][1].Show = true;
-			Count++;
-			if (Count == 2) return;
-			if (rand() % 2)
-			{
-				Tetris.Cube[0][0].Show = true;
-				Count++;
-				if (Count == 2) return;
-			}
-			if (rand() % 2)
-			{
-				Tetris.Cube[1][0].Show = true;
-				Count++;
-				if (Count == 2) return;
-			}
-			if (rand() % 2)
-			{
-				Tetris.Cube[2][2].Show = true;
-				Count++;
-				if (Count == 2) return;
-			}
-			Tetris.Cube[3][1].Show = true;
-			Count++; if (Count == 2) return;
+			in >> Tetris.Cube[i][j].Show;
 		}
 	}
-	Tetris.Dir = rand() % 5;
+	in.close();
 }
 
 void Fix()
 {
 	Tetris.Active = false;
-	Cube[Tetris.C][Tetris.R].Show = true,Cube[Tetris.C][Tetris.R].R=Tetris.Cube[0][0].R, Cube[Tetris.C][Tetris.R].G=Tetris.Cube[0][0].G, Cube[Tetris.C][Tetris.R].B=Tetris.Cube[0][0].B;
 
-	Cube[Tetris.C + 1][Tetris.R].Show = true,Cube[Tetris.C + 1][Tetris.R].R=Tetris.Cube[0][0].R, Cube[Tetris.C + 1][Tetris.R].G=Tetris.Cube[0][0].G,Cube[Tetris.C + 1][Tetris.R].B=Tetris.Cube[0][0].B;
-	if (Tetris.Cube[3][1].Show)	Cube[Tetris.C + 2][Tetris.R].Show = true , Cube[Tetris.C + 2][Tetris.R].R=Tetris.Cube[0][0].R, Cube[Tetris.C + 2][Tetris.R].G=Tetris.Cube[0][0].G, Cube[Tetris.C + 2][Tetris.R].B=Tetris.Cube[0][0].B;
-
-	if (Tetris.Cube[1][0].Show)	Cube[Tetris.C][Tetris.R + 1].Show = true,Cube[Tetris.C][Tetris.R + 1].R=Tetris.Cube[0][0].R, Cube[Tetris.C][Tetris.R + 1].G=Tetris.Cube[0][0].G, Cube[Tetris.C][Tetris.R + 1].B=Tetris.Cube[0][0].B;
-
-	if (Tetris.Cube[0][0].Show)	Cube[Tetris.C - 1][Tetris.R + 1].Show = true,Cube[Tetris.C - 1][Tetris.R + 1].R=Tetris.Cube[0][0].R, Cube[Tetris.C - 1][Tetris.R + 1].G=Tetris.Cube[0][0].G, Cube[Tetris.C - 1][Tetris.R + 1].B=Tetris.Cube[0][0].B;
-	if (Tetris.Cube[0][1].Show)	Cube[Tetris.C - 1][Tetris.R].Show = true,Cube[Tetris.C - 1][Tetris.R].R=Tetris.Cube[0][0].R, Cube[Tetris.C - 1][Tetris.R].G=Tetris.Cube[0][0].G, Cube[Tetris.C - 1][Tetris.R].B=Tetris.Cube[0][0].B;
-
-	if (Tetris.Cube[2][0].Show)	Cube[Tetris.C + 1][Tetris.R + 1].Show = true,Cube[Tetris.C + 1][Tetris.R + 1].R=Tetris.Cube[0][0].R, Cube[Tetris.C + 1][Tetris.R + 1].G=Tetris.Cube[0][0].G, Cube[Tetris.C + 1][Tetris.R + 1].B=Tetris.Cube[0][0].B;
-
-	if (Tetris.Cube[1][2].Show)	Cube[Tetris.C ][Tetris.R - 1].Show = true,Cube[Tetris.C ][Tetris.R - 1].R=Tetris.Cube[0][0].R, Cube[Tetris.C ][Tetris.R - 1].G=Tetris.Cube[0][0].G, Cube[Tetris.C ][Tetris.R - 1].B=Tetris.Cube[0][0].B;
-
-	if (Tetris.Cube[2][2].Show)	Cube[Tetris.C + 1][Tetris.R - 1].Show = true,Cube[Tetris.C + 1][Tetris.R - 1].R=Tetris.Cube[0][0].R, Cube[Tetris.C + 1][Tetris.R - 1].G=Tetris.Cube[0][0].G, Cube[Tetris.C + 1][Tetris.R - 1].B=Tetris.Cube[0][0].B;
-
-
+	for (int i = 0; i < Tetris.col; i++)
+	{
+		for (int j = 0; j < Tetris.row; j++)
+		{
+			if (Tetris.Cube[i][j].Show)
+			{
+				Cube[Tetris.C + i][Tetris.R + j].Show = true;
+				Cube[Tetris.C + i][Tetris.R + j].R = Tetris.Cube[0][0].R;
+				Cube[Tetris.C + i][Tetris.R + j].G = Tetris.Cube[0][0].G;
+				Cube[Tetris.C + i][Tetris.R + j].B = Tetris.Cube[0][0].B;
+			}
+		}
+	}
 }
 
-void CheckBottom()
+bool CheckBottom()
 {
-	if (Cube[Tetris.C][Tetris.R - 1].Show)   Fix();
-	else if (Cube[Tetris.C + 1][Tetris.R - 1].Show)   Fix();
-	else if (Tetris.Cube[3][1].Show && Cube[Tetris.C + 2][Tetris.R - 1].Show)	Fix();
-	else if (Tetris.Cube[1][0].Show && Cube[Tetris.C][Tetris.R].Show)	Fix();
-	else if (Tetris.Cube[0][0].Show && Cube[Tetris.C - 1][Tetris.R].Show)	  Fix();
-	else if (Tetris.Cube[0][1].Show && Cube[Tetris.C - 1][Tetris.R - 1].Show)	Fix();
-	else if (Tetris.Cube[2][0].Show && Cube[Tetris.C + 1][Tetris.R].Show)   Fix();
-	else if (Tetris.Cube[1][2].Show && Cube[Tetris.C][Tetris.R-2].Show)   Fix();
-	else if (Tetris.Cube[2][2].Show && Cube[Tetris.C + 1][Tetris.R-2].Show)   Fix();
+	for (int i = 0; i < Tetris.col; i++)
+	{
+		for (int j = 0; j < Tetris.row; j++)
+		{
+			if (Tetris.Cube[i][j].Show)
+			{
+				if (Tetris.R + j - 1 < 0)
+				{
+					return false;
+				}
+				else if (Cube[Tetris.C + i][Tetris.R + j - 1].Show)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
 }
+
+bool CheckLeft()
+{
+	for (int i = 0; i < Tetris.col; i++)
+	{
+		for (int j = 0; j < Tetris.row; j++)
+		{
+			if (Tetris.Cube[i][j].Show)
+			{
+				if (Tetris.C + i - 1 < 0)
+				{
+					return false;
+				}
+				else if (Cube[Tetris.C + i - 1][Tetris.R + j].Show)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+bool CheckRight()
+{
+	for (int i = 0; i < Tetris.col; i++)
+	{
+		for (int j = 0; j < Tetris.row; j++)
+		{
+			if (Tetris.Cube[i][j].Show)
+			{
+				if (Tetris.C + i + 1 >= Block::TotalC)
+				{
+					return false;
+				}
+				else if (Cube[Tetris.C + i + 1][Tetris.R + j].Show)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
 void Fall()
 {
 	if (!Tetris.R)
@@ -273,10 +366,14 @@ void Fall()
 		Fix();
 		return;
 	}
-
-	CheckBottom();
-
-	Tetris.R--;
+	if (CheckBottom())
+	{
+		Tetris.R--;
+	}
+	else
+	{
+		Fix();
+	}
 }
 
 void Match()
@@ -290,14 +387,15 @@ void Match()
 		}
 		if (j == Block::TotalC)
 		{
-			for(int k = i; k < Block::TotalR; k++)
+			for (int k = i; k < Block::TotalR; k++)
 			{
 				for (int l = 0; l < Block::TotalC; l++)
 				{
-					Cube[l][k].Show=Cube[l][k+1].Show;
+					Cube[l][k].Show = Cube[l][k + 1].Show;
 				}
 			}
 			i--;
+			Score+=10;
 		}
 	}
 }
