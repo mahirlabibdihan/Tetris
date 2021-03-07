@@ -1,1 +1,1 @@
-<img src="Tetris.png" width="600">
+<img src="Tetris.png" width="900">
