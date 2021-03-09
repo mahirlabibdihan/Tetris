@@ -94,7 +94,7 @@ public:
 	int design;
 	Structure()
 	{
-		int a = 20 + rand() % 236, b = 20 + rand() % 236, c = 20 + rand() % 236;
+		int a = 20 + rand() % 220, b = 20 + rand() % 220, c = 20 + rand() % 220;
 		for (int i = 0; i < 4; i++)
 		{
 			for (int j = 0; j < 4; j++)
@@ -114,7 +114,7 @@ public:
 	}
 	void Reset()
 	{
-		int a = 20 + rand() % 236, b = 20 + rand() % 236, c = 20 + rand() % 236;
+		int a = 20 + rand() % 220, b = 20 + rand() % 220, c = 20 + rand() % 220;
 		// int a = rand() % 256, b = rand() % 256, c = rand() % 256;
 		for (int i = 0; i < col; i++)
 		{
@@ -502,6 +502,9 @@ void Match()
 				for (int l = 0; l < Block::TotalC; l++)
 				{
 					Cube[l][k].Show = Cube[l][k + 1].Show;
+					Cube[l][k].R = Cube[l][k + 1].R;
+					Cube[l][k].G = Cube[l][k + 1].G;
+					Cube[l][k].B = Cube[l][k + 1].B;
 				}
 			}
 			i--;
